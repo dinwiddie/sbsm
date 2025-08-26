@@ -30,7 +30,7 @@ public class ThreadSafetyTest implements Consts {
         testCycle();
     }
 
-    private int TOTAL = 1000;
+    private int TOTAL = 100000;
 
     @Test
     public void testSeveral() {

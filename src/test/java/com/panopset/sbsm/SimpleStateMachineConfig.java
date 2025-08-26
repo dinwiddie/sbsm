@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.HashSet;
 
+import static com.panopset.sbsm.Events.*;
 import static com.panopset.sbsm.States.*;
 
 @Configuration
@@ -37,21 +38,34 @@ public class SimpleStateMachineConfig extends EnumStateMachineConfigurerAdapter<
     public void configure(StateMachineStateConfigurer<States, Events> states) throws Exception {
         HashSet<States> set = new HashSet<>();
         set.add(JACKSON);
+        set.add(MIDDLE);
         set.add(TOTALS);
         states
                 .withStates()
                 .initial(INIT)
-                .state(MIDDLE, simpleAction)
                 .states(set)
                 .end(END);
     }
 
     @Override
     public void configure(StateMachineTransitionConfigurer<States, Events> transitions) throws Exception {
-        ExternalTransitionConfigurer<States, Events> we = transitions.withExternal();
-        for (Events event: Events.values()) {
-            we = we.source(event.fromState).target(event.toState).event(event).and().withExternal();
-        }
+        transitions.withExternal()
+                .source(INIT).target(MIDDLE)
+                .event(START)
+                .and().withExternal()
+
+                .source(MIDDLE).target(JACKSON)
+                .event(FROM_EXTERNAL)
+                .action(simpleAction)
+                .and().withExternal()
+
+                .source(JACKSON).target(TOTALS)
+                .event(FROM_PROCESS)
+                .and().withExternal()
+
+                .source(TOTALS).target(END)
+                .event(WRAP)
+                ;
     }
 
     private StateMachineListener<States, Events> listener() {
